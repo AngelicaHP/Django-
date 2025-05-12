@@ -1,0 +1,114 @@
+<!-- Añadir a templates/core/articulos/list_infinite.html -->
+{% extends 'base.html' %}
+
+{% block title %}Catálogo de Artículos - Sistema POS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h3"><i class="fas fa-boxes me-2"></i>Catálogo de Artículos</h2>
+    <div>
+        <input type="text" id="searchInput" class="form-control" placeholder="Buscar artículos...">
+    </div>
+</div>
+<div class="row" id="articulos-container">
+    <!-- Aquí se cargarán los artículos -->
+</div>
+<div class="text-center my-4 d-none" id="loading">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let nextPage = null;
+        let isLoading = false;
+        const container = document.getElementById('articulos-container');
+        const loadingIndicator = document.getElementById('loading');
+        const searchInput = document.getElementById('searchInput');
+
+        // Función para cargar artículos
+        async function loadArticulos(url, append = false) {
+            if (isLoading) return;
+            isLoading = true;
+
+            if (!append) {
+                container.innerHTML = '';
+            }
+
+            loadingIndicator.classList.remove('d-none');
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                nextPage = data.next;
+
+                data.results.forEach(articulo => {
+                    const card = document.createElement('div');
+                    card.className = 'col-md-4 mb-4';
+                    card.innerHTML = `
+                        <div class="card shadow h-100">
+                            <div class="card-body">
+                                <h5 
+                                class="card-title">${articulo.descripcion}</h5>
+                                <p class="card-text">
+                                <strong>Código:</strong>
+${articulo.codigo_articulo}<br>
+                                <strong>Grupo:</strong>
+${articulo.grupo.nombre_grupo}<br>
+                                <strong>Línea:</strong>
+${articulo.linea.nombre_linea}<br>
+                                <strong>Stock:</strong>
+                                <span class="badge ${articulo.stock < 10 ? 
+'bg-danger' : 'bg-success'}">${articulo.stock}</span>
+                            </p>
+                            <h6
+class="text-primary">$${articulo.listaprecio.precio_1}</h6>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <a
+href="/core/articulos/${articulo.articulo_id}/" class="btn btn-sm btn-outline-primary">Ver Detalles</a>
+                        </div>
+                        </div>
+                    `;
+
+                    container.appendChild(card);
+            });
+
+            } catch (error) {
+                console.error('Error al cargar artículos:', error);
+            } finally {
+                loadingIndicator.classList.add('d-none');
+                isLoading = false;
+            }
+        }
+
+        // Cargar artículos iniciales
+        loadArticulos('/core/api/articulos/');
+
+        // Cargar más artículos al hacer scroll
+        window.addEventListener('scroll', () => {
+            if (nextPage && !isLoading &&
+                window.innerHeight + window.scrollY >=
+                document.body.offsetHeight - 200) {
+                loadArticulos(nextPage, true);
+            }
+        });
+
+        // Filtrar artículos al escribir
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                const searchTerm = e.target.value.trim();
+                const url = searchTerm
+                    ?
+                    `/core/api/articulos/?descripcion=${encodeURIComponent(searchTerm)}`
+                    : '/core/api/articulos/';
+                loadArticulos(url);
+            }, 500);
+        });
+    });
+</script>
+{% endblock %}

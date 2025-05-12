@@ -1,0 +1,138 @@
+<!-- Crear archivo templates/emails/order_confirmation.html -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmación de Orden #{{ orden.nro_pedido }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .footer {
+            background-color: #f8f9fa;
+            padding:  15px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f9fa;
+        }
+
+        .total {
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Confirmación de Orden</h1>
+        <p>Orden #{{ orden.nro_pedido }}</p>
+    </div>
+
+    <div class="content">
+        <p>Estimado/a {{ orden.cliente.nombres }},</p>
+
+        <p>¡Gracias por tu compra! Hemos recibido tu orden y está siendo
+            procesada.</p>
+
+        <h3>Detalles de la Orden:</h3>
+        <p>
+            <strong>Fecha:</strong> {{ orden.fecha_pedido }}<br>
+            <strong>Estado:</strong>
+            {% if orden.estado == 1 %}
+            Pendiente
+            {% elif orden.estado == 2 %}
+            Procesando
+            {% elif orden.estado == 3 %}
+            Completada
+            {% else %}
+            Cancelada
+            {% endif %}
+        </p>
+
+        <h3>Productos:</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.articulo.descripcion }}</td>
+                    <td>${{ item.precio_unitario }}</td>
+                    <td>{{ item.cantidad }}</td>
+                    <td>${{ item.total_item }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="total">Total:</td>
+                    <td>${{ orden.importe }}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <p>Si tienes alguna pregunta sobre tu orden, no dudes en
+            contactarnos.</p>
+
+        <a href="http://localhost:8000/orden/{{ orden.pedido_id }}/" class="btn">Ver Detalles de la Orden</a>
+    </div>
+
+    <div class="footer">
+        <p>&copy; {% now "Y" %} Sistema POS. Todos los derechos reservados.</p>
+        <p>Este es un correo electrónico automático, por favor no responda a
+            este mensaje.</p>
+    </div>
+</body>
+
+</html>
